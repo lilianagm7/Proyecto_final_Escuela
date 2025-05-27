@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 namespace Pruebas.Models
 {
@@ -18,6 +19,10 @@ namespace Pruebas.Models
         public string? Ciudad { get; set; }
         public string? Direccion { get; set; }
         public string? Telefono { get; set; }
+
+        [DataType(DataType.Date)]
+        [DisplayFormat(DataFormatString = "{0:yyyy-MM-dd}", ApplyFormatInEditMode = true)]
+
         public DateTime? FechaNacimiento { get; set; }
         public string? Sexo { get; set; }
         public int? IdDepartamento { get; set; }
