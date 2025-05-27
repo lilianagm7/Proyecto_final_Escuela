@@ -1,0 +1,59 @@
+﻿@model IEnumerable<Pruebas.Models.Alumno>
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h1>Alumnos</h1>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <form asp-action="Index" method="get" class="row mb-4">
+        <div class="col-md-8">
+            <input type="text" name="buscar" class="form-control" placeholder="Buscar alumno por nombre..." value="@Context.Request.Query["nombre"]" />
+        </div>
+        <div class="col-md-4">
+            <button type="submit" class="btn btn-primary w-100">Buscar</button>
+        </div>
+    </form>
+
+    <a asp-action="Create" class="btn btn-primary" style="background-color: #5dade2;">Crear Nuevo</a>
+
+</div>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>@Html.DisplayNameFor(model => model.Nif)</th>
+            <th>@Html.DisplayNameFor(model => model.Nombre)</th>
+            <th>@Html.DisplayNameFor(model => model.Apellido1)</th>
+            <th>@Html.DisplayNameFor(model => model.Apellido2)</th>
+            <th>@Html.DisplayNameFor(model => model.Ciudad)</th>
+            <th>@Html.DisplayNameFor(model => model.Direccion)</th>
+            <th>@Html.DisplayNameFor(model => model.Telefono)</th>
+            <th>@Html.DisplayNameFor(model => model.FechaNacimiento)</th>
+            <th>@Html.DisplayNameFor(model => model.Sexo)</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@Html.DisplayFor(modelItem => item.Nif)</td>
+                <td>@Html.DisplayFor(modelItem => item.Nombre)</td>
+                <td>@Html.DisplayFor(modelItem => item.Apellido1)</td>
+                <td>@Html.DisplayFor(modelItem => item.Apellido2)</td>
+                <td>@Html.DisplayFor(modelItem => item.Ciudad)</td>
+                <td>@Html.DisplayFor(modelItem => item.Direccion)</td>
+                <td>@Html.DisplayFor(modelItem => item.Telefono)</td>
+                <td>@Html.DisplayFor(modelItem => item.FechaNacimiento)</td>
+                <td>@Html.DisplayFor(modelItem => item.Sexo)</td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm" style="background-color: #85c1e9; color: white;">Editar</a>
+                    <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm" style="background-color: #2874a6; color: white;">Detalles</a>
+                    <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-danger">Eliminar</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
