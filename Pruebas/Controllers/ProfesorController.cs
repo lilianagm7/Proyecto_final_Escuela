@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Pruebas.Models;
 
@@ -52,16 +53,25 @@ namespace Pruebas.Controllers
         }
 
         // POST: Profesor/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Id,Nif,Nombre,Apellido1,Apellido2,Ciudad,Direccion,Telefono,FechaNacimiento,Sexo,IdDepartamento")] Profesor profesor)
         {
             if (ModelState.IsValid)
             {
-                _context.Add(profesor);
-                await _context.SaveChangesAsync();
+                var parameters = new[]{
+                    new SqlParameter("@Nif", profesor.Nif ?? (object)DBNull.Value),
+                    new SqlParameter("@Nombre", profesor.Nombre ?? (object)DBNull.Value),
+                    new SqlParameter("@Apellido1", profesor.Apellido1 ?? (object)DBNull.Value),
+                    new SqlParameter("@Apellido2", profesor.Apellido2 ?? (object)DBNull.Value),
+                    new SqlParameter("@Ciudad", profesor.Ciudad ?? (object)DBNull.Value),
+                    new SqlParameter("@Direccion", profesor.Direccion ?? (object)DBNull.Value),
+                    new SqlParameter("@Telefono", profesor.Telefono ?? (object)DBNull.Value),
+                    new SqlParameter("@FechaNacimiento", profesor.FechaNacimiento),
+                    new SqlParameter("@Sexo", profesor.Sexo ?? (object)DBNull.Value),
+                    new SqlParameter("@IdDepartamento", profesor.IdDepartamento)
+                };
+                await _context.Database.ExecuteSqlRawAsync("EXEC SP_Insertar_Profesor @Nif, @Nombre, @Apellido1, @Apellido2, @Ciudad, @Direccion, @Telefono, @FechaNacimiento, @Sexo, @IdDepartamento", parameters);
                 return RedirectToAction(nameof(Index));
             }
             ViewData["IdDepartamento"] = new SelectList(_context.Departamentos, "Id", "Id", profesor.IdDepartamento);
@@ -86,8 +96,6 @@ namespace Pruebas.Controllers
         }
 
         // POST: Profesor/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("Id,Nif,Nombre,Apellido1,Apellido2,Ciudad,Direccion,Telefono,FechaNacimiento,Sexo,IdDepartamento")] Profesor profesor)
@@ -101,8 +109,20 @@ namespace Pruebas.Controllers
             {
                 try
                 {
-                    _context.Update(profesor);
-                    await _context.SaveChangesAsync();
+                    var parameters = new[]{
+                        new SqlParameter("@Id", profesor.Id),
+                        new SqlParameter("@Nif", profesor.Nif ?? (object)DBNull.Value),
+                        new SqlParameter("@Nombre", profesor.Nombre ?? (object)DBNull.Value),
+                        new SqlParameter("@Apellido1", profesor.Apellido1 ?? (object)DBNull.Value),
+                        new SqlParameter("@Apellido2", profesor.Apellido2 ?? (object)DBNull.Value),
+                        new SqlParameter("@Ciudad", profesor.Ciudad ?? (object)DBNull.Value),
+                        new SqlParameter("@Direccion", profesor.Direccion ?? (object)DBNull.Value),
+                        new SqlParameter("@Telefono", profesor.Telefono ?? (object)DBNull.Value),
+                        new SqlParameter("@FechaNacimiento", profesor.FechaNacimiento == default(DateTime) ? (object)DBNull.Value : profesor.FechaNacimiento),
+                        new SqlParameter("@Sexo", profesor.Sexo ?? (object)DBNull.Value),
+                        new SqlParameter("@IdDepartamento", profesor.IdDepartamento)
+                    };
+                    await _context.Database.ExecuteSqlRawAsync("EXEC SP_Actualizar_Profesor @Id, @Nif, @Nombre, @Apellido1, @Apellido2, @Ciudad, @Direccion, @Telefono, @FechaNacimiento, @Sexo, @IdDepartamento", parameters);
                 }
                 catch (DbUpdateConcurrencyException)
                 {
@@ -147,21 +167,54 @@ namespace Pruebas.Controllers
         {
             if (_context.Profesors == null)
             {
-                return Problem("Entity set 'EscuelaBContext.Profesors'  is null.");
+                return Problem("Entity set 'EscuelaBContext.Profesors' is null.");
             }
-            var profesor = await _context.Profesors.FindAsync(id);
-            if (profesor != null)
-            {
-                _context.Profesors.Remove(profesor);
-            }
-            
-            await _context.SaveChangesAsync();
+
+            var parameter = new SqlParameter("@Id", id);
+            await _context.Database.ExecuteSqlRawAsync("EXEC SP_Eliminar_Profesor @Id", parameter);
+
             return RedirectToAction(nameof(Index));
         }
 
         private bool ProfesorExists(int id)
         {
-          return (_context.Profesors?.Any(e => e.Id == id)).GetValueOrDefault();
+            return (_context.Profesors?.Any(e => e.Id == id)).GetValueOrDefault();
+        }
+
+       
+        public async Task<IActionResult> SearchByApellido1(string apellido1)
+        {
+            if (string.IsNullOrEmpty(apellido1))
+            {
+                return RedirectToAction(nameof(Index));
+            }
+
+            var param = new SqlParameter("@apellido1", apellido1);
+
+            var profesores = await _context.Profesors
+                .FromSqlRaw("EXEC SP_Consultar_Profesor_Apellido1 @apellido1", param)
+                .Include(p => p.IdDepartamentoNavigation)
+                .ToListAsync();
+
+            return View("Index", profesores);
+        }
+
+        // Filtrar profesores por IdDepartamento
+        public async Task<IActionResult> FilterByDepartamento(int? idDepartamento)
+        {
+            if (idDepartamento == null)
+            {
+                return RedirectToAction(nameof(Index));
+            }
+
+            var param = new SqlParameter("@id_departamento", idDepartamento.Value);
+
+            var profesores = await _context.Profesors
+                .FromSqlRaw("EXEC SP_Consultar_Profesor_Por_Departamento @id_departamento", param)
+                .Include(p => p.IdDepartamentoNavigation)
+                .ToListAsync();
+
+            return View("Index", profesores);
         }
     }
 }
