@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Pruebas.Models;
 
@@ -60,8 +61,19 @@ namespace Pruebas.Controllers
         {
             if (ModelState.IsValid)
             {
-                _context.Add(profesor);
-                await _context.SaveChangesAsync();
+                var parameters = new[]{
+                    new SqlParameter("@Nif", profesor.Nif ?? (object)DBNull.Value),
+                    new SqlParameter("@Nombre", profesor.Nombre ?? (object)DBNull.Value),
+                    new SqlParameter("@Apellido1", profesor.Apellido1 ?? (object)DBNull.Value),
+                    new SqlParameter("@Apellido2", profesor.Apellido2 ?? (object)DBNull.Value),
+                    new SqlParameter("@Ciudad", profesor.Ciudad ?? (object)DBNull.Value),
+                    new SqlParameter("@Direccion", profesor.Direccion ?? (object)DBNull.Value),
+                    new SqlParameter("@Telefono", profesor.Telefono ?? (object)DBNull.Value),
+                    new SqlParameter("@FechaNacimiento", profesor.FechaNacimiento),
+                    new SqlParameter("@Sexo", profesor.Sexo ?? (object)DBNull.Value),
+                    new SqlParameter("@IdDepartamento", profesor.IdDepartamento)
+                };
+                await _context.Database.ExecuteSqlRawAsync("EXEC SP_Insertar_Profesor @Nif, @Nombre, @Apellido1, @Apellido2, @Ciudad, @Direccion, @Telefono, @FechaNacimiento, @Sexo, @IdDepartamento", parameters);
                 return RedirectToAction(nameof(Index));
             }
             ViewData["IdDepartamento"] = new SelectList(_context.Departamentos, "Id", "Id", profesor.IdDepartamento);
@@ -101,8 +113,20 @@ namespace Pruebas.Controllers
             {
                 try
                 {
-                    _context.Update(profesor);
-                    await _context.SaveChangesAsync();
+                    var parameters = new[]{
+                        new SqlParameter("@Id", profesor.Id),
+                        new SqlParameter("@Nif", profesor.Nif ?? (object)DBNull.Value),
+                        new SqlParameter("@Nombre", profesor.Nombre ?? (object)DBNull.Value),
+                        new SqlParameter("@Apellido1", profesor.Apellido1 ?? (object)DBNull.Value),
+                        new SqlParameter("@Apellido2", profesor.Apellido2 ?? (object)DBNull.Value),
+                        new SqlParameter("@Ciudad", profesor.Ciudad ?? (object)DBNull.Value),
+                        new SqlParameter("@Direccion", profesor.Direccion ?? (object)DBNull.Value),
+                        new SqlParameter("@Telefono", profesor.Telefono ?? (object)DBNull.Value),
+                        new SqlParameter("@FechaNacimiento", profesor.FechaNacimiento == default(DateTime) ? (object)DBNull.Value : profesor.FechaNacimiento),
+                        new SqlParameter("@Sexo", profesor.Sexo ?? (object)DBNull.Value),
+                        new SqlParameter("@IdDepartamento", profesor.IdDepartamento)
+                    };
+                    await _context.Database.ExecuteSqlRawAsync("EXEC SP_Actualizar_Profesor @Id, @Nif, @Nombre, @Apellido1, @Apellido2, @Ciudad, @Direccion, @Telefono, @FechaNacimiento, @Sexo, @IdDepartamento", parameters);
                 }
                 catch (DbUpdateConcurrencyException)
                 {
