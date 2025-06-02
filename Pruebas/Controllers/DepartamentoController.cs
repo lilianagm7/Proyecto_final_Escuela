@@ -27,7 +27,7 @@ namespace Pruebas.Controllers
             List<Departamento> lista = new();
             using (SqlConnection conn = new(_connectionString))
             {
-                SqlCommand cmd = new("SP_Consultar_Departament", conn);
+                SqlCommand cmd = new("SP_Consultar_Departamento", conn);
                 cmd.CommandType = CommandType.StoredProcedure;
                 await conn.OpenAsync();
                 SqlDataReader reader = await cmd.ExecuteReaderAsync();

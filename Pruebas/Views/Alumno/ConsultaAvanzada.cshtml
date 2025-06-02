@@ -1,0 +1,57 @@
+﻿@model List<Pruebas.Models.Alumno>
+
+@{
+    ViewData["Title"] = "Consulta Avanzada de Alumnos";
+}
+
+<h2>Consulta por Apellido y Fecha de Nacimiento</h2>
+
+<form asp-action="ConsultaAvanzada" method="post">
+    <div class="form-group">
+        <label for="apellido1">Apellido paterno:</label>
+        <input type="text" name="apellido1" class="form-control" required />
+    </div>
+    <div class="form-group">
+        <label for="fechaNacimiento">Fecha de nacimiento:</label>
+        <input type="date" name="fechaNacimiento" class="form-control" required />
+    </div>
+    <button type="submit" class="btn btn-primary">Buscar</button>
+</form>
+
+@if (Model != null && Model.Count > 0)
+{
+    <h3>Resultados:</h3>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>NIF</th>
+                <th>Nombre</th>
+                <th>Apellido 1</th>
+                <th>Apellido 2</th>
+                <th>Ciudad</th>
+                <th>Dirección</th>
+                <th>Teléfono</th>
+                <th>Fecha Nacimiento</th>
+                <th>Sexo</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var alumno in Model)
+            {
+                <tr>
+                    <td>@alumno.Id</td>
+                    <td>@alumno.Nif</td>
+                    <td>@alumno.Nombre</td>
+                    <td>@alumno.Apellido1</td>
+                    <td>@alumno.Apellido2</td>
+                    <td>@alumno.Ciudad</td>
+                    <td>@alumno.Direccion</td>
+                    <td>@alumno.Telefono</td>
+                    <td>@alumno.FechaNacimiento.ToString()</td>
+                    <td>@alumno.Sexo</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

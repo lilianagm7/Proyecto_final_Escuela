@@ -5,9 +5,8 @@
 }
 
 <h1>Alumnos</h1>
-
 <div class="d-flex justify-content-between align-items-center mb-3">
-    <form asp-action="Index" method="get" class="row mb-4">
+    <form asp-action="Index" method="get" class="row mb-4 w-100">
         <div class="col-md-8">
             <input type="text" name="buscar" class="form-control" placeholder="Buscar alumno por nombre..." value="@Context.Request.Query["nombre"]" />
         </div>
@@ -15,10 +14,18 @@
             <button type="submit" class="btn btn-primary w-100">Buscar</button>
         </div>
     </form>
-
-    <a asp-action="Create" class="btn btn-primary" style="background-color: #5dade2;">Crear Nuevo</a>
-
 </div>
+
+<div class="mb-3">
+    <a asp-action="Create" class="btn btn-primary mb-2" style="background-color: #5dade2;">Crear Nuevo</a>
+</div>
+
+<div class="mb-4">
+    <a asp-controller="Alumno" asp-action="ConsultaAvanzada" class="btn btn-info me-2 mb-2">Consulta por Apellido y Fecha</a>
+    <a asp-controller="Alumno" asp-action="ConsultaPorFecha" class="btn btn-secondary me-2 mb-2">Buscar por Fecha de Nacimiento</a>
+    <a asp-controller="Alumno" asp-action="ConsultaPorNif" class="btn btn-secondary mb-2">Buscar por NIF</a>
+</div>
+
 
 <table class="table table-striped">
     <thead>

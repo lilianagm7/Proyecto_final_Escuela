@@ -26,7 +26,7 @@ namespace Pruebas.Controllers
                 string.IsNullOrEmpty(buscar) ? DBNull.Value : buscar);
 
             var alumnos = await _context.Alumnos
-                .FromSqlRaw("EXEC SP_Consultar_Profesor @buscar", param)
+                .FromSqlRaw("EXEC SP_Consultar_Alumno @buscar", param)
                 .ToListAsync();
 
             ViewData["Buscar"] = buscar;
@@ -171,5 +171,68 @@ namespace Pruebas.Controllers
         {
           return (_context.Alumnos?.Any(e => e.Id == id)).GetValueOrDefault();
         }
+
+        // GET: Alumno/ConsultaAvanzada
+        public IActionResult ConsultaAvanzada()
+        {
+            return View();
+        }
+
+        // POST: Alumno/ConsultaAvanzada
+        [HttpPost]
+        public async Task<IActionResult> ConsultaAvanzada(string apellido1, DateTime fechaNacimiento)
+        {
+            var parametros = new[]
+            {
+                new SqlParameter("@Apellido1", apellido1 ?? (object)DBNull.Value),
+                new SqlParameter("@FechaNacimiento", fechaNacimiento)
+            };
+
+            var alumnos = await _context.Alumnos
+                .FromSqlRaw("EXEC sp_ConsultarAlumnosPorApellidoYFechaNacimiento @Apellido1, @FechaNacimiento", parametros)
+                .ToListAsync();
+
+            return View(alumnos);
+        }
+
+        // GET: Alumno/ConsultaPorFecha
+        public IActionResult ConsultaPorFecha()
+        {
+            return View();
+        }
+
+        // POST: Alumno/ConsultaPorFecha
+        [HttpPost]
+        public async Task<IActionResult> ConsultaPorFecha(DateTime fechaNacimiento)
+        {
+            var parametro = new SqlParameter("@FechaNacimiento", fechaNacimiento);
+
+            var alumnos = await _context.Alumnos
+                .FromSqlRaw("EXEC sp_ConsultarAlumnosPorFechaNacimiento @FechaNacimiento", parametro)
+                .ToListAsync();
+
+            return View(alumnos);
+        }
+
+        // GET: Alumno/ConsultaPorNif
+        public IActionResult ConsultaPorNif()
+        {
+            return View();
+        }
+
+        // POST: Alumno/ConsultaPorNif
+        [HttpPost]
+        public async Task<IActionResult> ConsultaPorNif(string nif)
+        {
+            var parametro = new SqlParameter("@Nif", nif ?? (object)DBNull.Value);
+
+            var alumnos = await _context.Alumnos
+                .FromSqlRaw("EXEC sp_ConsultarAlumnosPorNif @Nif", parametro)
+                .ToListAsync();
+
+            return View(alumnos);
+        }
+
+
     }
 }

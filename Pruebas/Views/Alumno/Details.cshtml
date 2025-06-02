@@ -1,4 +1,5 @@
-﻿@model Pruebas.Models.Alumno
+﻿
+@model Pruebas.Models.Alumno
 
 @{
     ViewData["Title"] = "Details";
@@ -67,6 +68,6 @@
     </dl>
 </div>
 <div>
-    <a asp-action="Edit" asp-route-id="@Model?.Id">Edit</a> |
+    <a asp-action="Edit" asp-route-id="@Model?.Id">Editar</a> |
     <a asp-action="Index" asp-controller="Alumno" class="btn" style="background-color: #81c784; color: white;">Ir a la lista</a>
 </div>

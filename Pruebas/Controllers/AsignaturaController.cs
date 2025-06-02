@@ -75,9 +75,10 @@ namespace Pruebas.Controllers
             if (id == null) return NotFound();
 
             var param = new SqlParameter("@id", SqlDbType.Int) { Value = id };
-            var asignatura = await _context.Asignaturas
+            var asignatura = _context.Asignaturas
                 .FromSqlRaw("EXEC SP_Consultar_Asignatura_ID @id", param)
-                .FirstOrDefaultAsync();
+                .AsEnumerable()
+                .FirstOrDefault();
 
             if (asignatura == null) return NotFound();
 
