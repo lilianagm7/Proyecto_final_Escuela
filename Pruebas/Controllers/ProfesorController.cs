@@ -93,6 +93,7 @@ namespace Pruebas.Controllers
             {
                 return NotFound();
             }
+
             ViewData["IdDepartamento"] = new SelectList(_context.Departamentos, "Id", "Id", profesor.IdDepartamento);
             return View(profesor);
         }
