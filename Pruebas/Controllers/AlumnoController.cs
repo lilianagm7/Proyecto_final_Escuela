@@ -1,8 +1,12 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Pruebas.Models;
-using System.Data;
 
 namespace Pruebas.Controllers
 {
@@ -16,25 +20,37 @@ namespace Pruebas.Controllers
         }
 
         // GET: Alumno
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string buscar)
         {
+            var param = new Microsoft.Data.SqlClient.SqlParameter("@buscar",
+                string.IsNullOrEmpty(buscar) ? DBNull.Value : buscar);
+
             var alumnos = await _context.Alumnos
-                .FromSqlRaw("EXEC SP_Consultar_Alumno")
+                .FromSqlRaw("EXEC SP_Consultar_Profesor @buscar", param)
                 .ToListAsync();
+
+            ViewData["Buscar"] = buscar;
+
             return View(alumnos);
         }
+
+
 
         // GET: Alumno/Details/5
         public async Task<IActionResult> Details(int? id)
         {
-            if (id == null) return NotFound();
+            if (id == null || _context.Alumnos == null)
+            {
+                return NotFound();
+            }
 
-            var param = new SqlParameter("@id", SqlDbType.Int) { Value = id };
             var alumno = await _context.Alumnos
-                .FromSqlRaw("EXEC SP_Consultar_Alumno_ID @id", param)
-                .FirstOrDefaultAsync();
+                .FirstOrDefaultAsync(m => m.Id == id);
+            if (alumno == null)
+            {
+                return NotFound();
+            }
 
-            if (alumno == null) return NotFound();
             return View(alumno);
         }
 
@@ -45,28 +61,26 @@ namespace Pruebas.Controllers
         }
 
         // POST: Alumno/Create
+        // To protect from overposting attacks, enable the specific properties you want to bind to.
+        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(Alumno alumno)
+        public async Task<IActionResult> Create([Bind("Id,Nif,Nombre,Apellido1,Apellido2,Ciudad,Direccion,Telefono,FechaNacimiento,Sexo")] Alumno alumno)
         {
             if (ModelState.IsValid)
             {
-                var parametros = new[]
-                {
-                    new SqlParameter("@nif", SqlDbType.VarChar, 9) { Value = alumno.Nif },
-                    new SqlParameter("@nombre", SqlDbType.VarChar, 25) { Value = alumno.Nombre },
-                    new SqlParameter("@apellido1", SqlDbType.VarChar, 50) { Value = alumno.Apellido1 },
-                    new SqlParameter("@apellido2", SqlDbType.VarChar, 50) { Value = alumno.Apellido2 },
-                    new SqlParameter("@ciudad", SqlDbType.VarChar, 25) { Value = alumno.Ciudad },
-                    new SqlParameter("@direccion", SqlDbType.VarChar, 50) { Value = alumno.Direccion },
-                    new SqlParameter("@telefono", SqlDbType.VarChar, 9) { Value = alumno.Telefono },
-                    new SqlParameter("@fecha_nacimiento", SqlDbType.Date) { Value = alumno.FechaNacimiento },
-                    new SqlParameter("@sexo", SqlDbType.Char, 1) { Value = alumno.Sexo }
+                var parametros = new[]{
+                    new SqlParameter("@Nif", alumno.Nif ?? (object)DBNull.Value),
+                    new SqlParameter("@Nombre", alumno.Nombre ?? (object)DBNull.Value),
+                    new SqlParameter("@Apellido1", alumno.Apellido1 ?? (object)DBNull.Value),
+                    new SqlParameter("@Apellido2", alumno.Apellido2 ?? (object)DBNull.Value),
+                    new SqlParameter("@Ciudad", alumno.Ciudad ?? (object)DBNull.Value),
+                    new SqlParameter("@Direccion", alumno.Direccion ?? (object)DBNull.Value),
+                    new SqlParameter("@Telefono", alumno.Telefono ?? (object)DBNull.Value),
+                    new SqlParameter("@FechaNacimiento", alumno.FechaNacimiento),
+                    new SqlParameter("@Sexo", alumno.Sexo ?? (object)DBNull.Value)
                 };
-
-                await _context.Database.ExecuteSqlRawAsync(
-                    "EXEC SP_Insertar_Alumno @nif, @nombre, @apellido1, @apellido2, @ciudad, @direccion, @telefono, @fecha_nacimiento, @sexo",
-                    parametros);
+                await _context.Database.ExecuteSqlRawAsync("EXEC sp_InsertarAlumno @Nif, @Nombre, @Apellido1, @Apellido2, @Ciudad, @Direccion, @Telefono, @FechaNacimiento, @Sexo", parametros);
 
                 return RedirectToAction(nameof(Index));
             }
@@ -76,45 +90,49 @@ namespace Pruebas.Controllers
         // GET: Alumno/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
-            if (id == null) return NotFound();
+            if (id == null || _context.Alumnos == null)
+            {
+                return NotFound();
+            }
 
-            var param = new SqlParameter("@id", SqlDbType.Int) { Value = id };
-            var alumno = await _context.Alumnos
-                .FromSqlRaw("EXEC SP_Consultar_Alumno_ID @id", param)
-                .FirstOrDefaultAsync();
-
-            if (alumno == null) return NotFound();
-
+            var alumno = await _context.Alumnos.FindAsync(id);
+            if (alumno == null)
+            {
+                return NotFound();
+            }
             return View(alumno);
         }
 
         // POST: Alumno/Edit/5
+        // To protect from overposting attacks, enable the specific properties you want to bind to.
+        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, Alumno alumno)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Nif,Nombre,Apellido1,Apellido2,Ciudad,Direccion,Telefono,FechaNacimiento,Sexo")] Alumno alumno)
         {
-            if (id != alumno.Id) return NotFound();
+            if (id != alumno.Id)
+            {
+                return NotFound();
+            }
 
             if (ModelState.IsValid)
             {
-                var parametros = new[]
+                try
                 {
-                    new SqlParameter("@id", SqlDbType.Int) { Value = alumno.Id },
-                    new SqlParameter("@nif", SqlDbType.VarChar, 9) { Value = alumno.Nif },
-                    new SqlParameter("@nombre", SqlDbType.VarChar, 25) { Value = alumno.Nombre },
-                    new SqlParameter("@apellido1", SqlDbType.VarChar, 50) { Value = alumno.Apellido1 },
-                    new SqlParameter("@apellido2", SqlDbType.VarChar, 50) { Value = alumno.Apellido2 },
-                    new SqlParameter("@ciudad", SqlDbType.VarChar, 25) { Value = alumno.Ciudad },
-                    new SqlParameter("@direccion", SqlDbType.VarChar, 50) { Value = alumno.Direccion },
-                    new SqlParameter("@telefono", SqlDbType.VarChar, 9) { Value = alumno.Telefono },
-                    new SqlParameter("@fecha_nacimiento", SqlDbType.Date) { Value = alumno.FechaNacimiento },
-                    new SqlParameter("@sexo", SqlDbType.Char, 1) { Value = alumno.Sexo }
-                };
-
-                await _context.Database.ExecuteSqlRawAsync(
-                    "EXEC SP_Actualizar_Alumno @id, @nif, @nombre, @apellido1, @apellido2, @ciudad, @direccion, @telefono, @fecha_nacimiento, @sexo",
-                    parametros);
-
+                    _context.Update(alumno);
+                    await _context.SaveChangesAsync();
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    if (!AlumnoExists(alumno.Id))
+                    {
+                        return NotFound();
+                    }
+                    else
+                    {
+                        throw;
+                    }
+                }
                 return RedirectToAction(nameof(Index));
             }
             return View(alumno);
@@ -123,14 +141,18 @@ namespace Pruebas.Controllers
         // GET: Alumno/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
-            if (id == null) return NotFound();
+            if (id == null || _context.Alumnos == null)
+            {
+                return NotFound();
+            }
 
-            var param = new SqlParameter("@id", SqlDbType.Int) { Value = id };
             var alumno = await _context.Alumnos
-                .FromSqlRaw("EXEC SP_Consultar_Alumno_ID @id", param)
-                .FirstOrDefaultAsync();
+                .FirstOrDefaultAsync(m => m.Id == id);
+            if (alumno == null)
+            {
+                return NotFound();
+            }
 
-            if (alumno == null) return NotFound();
             return View(alumno);
         }
 
@@ -139,9 +161,15 @@ namespace Pruebas.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var param = new SqlParameter("@id", SqlDbType.Int) { Value = id };
-            await _context.Database.ExecuteSqlRawAsync("EXEC SP_Eliminar_Alumno @id", param);
+            var param = new Microsoft.Data.SqlClient.SqlParameter("@Id", id);
+            await _context.Database.ExecuteSqlRawAsync("EXEC sp_EliminarAlumno @Id", param);
+
             return RedirectToAction(nameof(Index));
+        }
+
+        private bool AlumnoExists(int id)
+        {
+          return (_context.Alumnos?.Any(e => e.Id == id)).GetValueOrDefault();
         }
     }
 }
